@@ -1,0 +1,113 @@
+definitions:
+  models.Product:
+    properties:
+      category_id:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: string
+      stock_quantity:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: get Products
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Product'
+            type: array
+      summary: Get all Products
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      description: create Product
+      parameters:
+      - description: Product to create
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/models.Product'
+      produces:
+      - application/json
+      responses: {}
+      summary: Create a new Product
+      tags:
+      - Products
+  /products/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete Product
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      summary: Delete a Product
+      tags:
+      - Products
+    get:
+      consumes:
+      - application/json
+      description: get Product by ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+      summary: Get a Product by ID
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      description: update Product
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Product to update
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/models.Product'
+      produces:
+      - application/json
+      responses: {}
+      summary: Update an existing Product
+      tags:
+      - Products
+swagger: "2.0"

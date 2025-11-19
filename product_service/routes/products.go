@@ -8,6 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetProducts godoc
+// @Summary      Get all Products
+// @Description  get Products
+// @Tags         Products
+// @Accept       json
+// @Produce      json
+// @Success      200  {array}   models.Product
+// @Router       /products [get]
 func getProducts(context *gin.Context) {
 	Products, err := models.GetAllproducts()
 	if err != nil {
@@ -17,6 +25,15 @@ func getProducts(context *gin.Context) {
 	context.JSON(http.StatusOK, Products)
 }
 
+// GetProductByID godoc
+// @Summary      Get a Product by ID
+// @Description  get Product by ID
+// @Tags         Products
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "Product ID"
+// @Success      200  {object}  models.Product
+// @Router       /products/{id} [get]
 func getProductByID(context *gin.Context) {
 
 	ProductId, err := strconv.ParseInt(context.Param("id"), 10, 64)
@@ -37,6 +54,14 @@ func getProductByID(context *gin.Context) {
 	context.JSON(http.StatusOK, product)
 }
 
+// CreateProducts godoc
+// @Summary      Create a new Product
+// @Description  create Product
+// @Tags         Products
+// @Accept       json
+// @Produce      json
+// @Param        product  body      models.Product  true  "Product to create"
+// @Router       /products [post]
 func createProducts(context *gin.Context) {
 	var newProduct models.Product
 	if err := context.ShouldBindJSON(&newProduct); err != nil {
@@ -54,6 +79,15 @@ func createProducts(context *gin.Context) {
 	context.JSON(http.StatusCreated, gin.H{"message": "Product created succesfully!", "product": newProduct})
 }
 
+// UpdateProduct godoc
+// @Summary      Update an existing Product
+// @Description  update Product
+// @Tags         Products
+// @Accept       json
+// @Produce      json
+// @Param        id       path      int             true  "Product ID"
+// @Param        product  body      models.Product  true  "Product to update"
+// @Router       /products/{id} [put]
 func updateProduct(context *gin.Context) {
 	ProductId, err := strconv.ParseInt(context.Param("id"), 10, 64)
 	if err != nil {
@@ -85,6 +119,14 @@ func updateProduct(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"message": "Product updated succesfully!", "product": updatedProduct})
 }
 
+// DeleteProduct godoc
+// @Summary      Delete a Product
+// @Description  delete Product
+// @Tags         Products
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "Product ID"
+// @Router       /products/{id} [delete]
 func deleteProduct(context *gin.Context) {
 	ProductId, err := strconv.ParseInt(context.Param("id"), 10, 64)
 	if err != nil {
