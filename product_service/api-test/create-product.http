@@ -1,0 +1,10 @@
+POST http://localhost:8080/products
+content-type: application/json
+authorization: <token>
+
+{
+  "name": "Team Meeting",
+  "dateTime": "2024-07-15T10:00:00Z",
+  "location": "Conference Room A",
+  "description": "Monthly team sync-up meeting to discuss project updates and plans."
+}

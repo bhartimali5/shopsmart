@@ -1,0 +1,10 @@
+PUT http://localhost:8080/products/1
+content-type: application/json  
+authorization: <token>
+
+{
+  "name": "Updated Team Meeting",
+  "dateTime": "2024-07-15T11:00:00Z",
+  "location": "Conference Room B",
+  "description": "Updated monthly team sync-up meeting to discuss project updates and plans."
+}
