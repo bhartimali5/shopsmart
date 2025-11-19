@@ -8,5 +8,5 @@ import (
 func RegisterRoutes(server *gin.Engine) {
 	server.POST("signup", signUp)
 	server.POST("login", login)
-	server.GET("/getUserProfile", middlewares.AuthMiddleware, getUserProfile)
+	server.GET("/user/profile", middlewares.AuthMiddleware, getUserProfile)
 }

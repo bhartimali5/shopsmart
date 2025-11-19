@@ -8,6 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// CreateUser godoc
+// @Summary Create new user
+// @Description This endpoint registers a user
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User Data"
+// @Success 200 {object} models.User
+// @Router /users [post]
 func signUp(context *gin.Context) {
 	var newUser models.User
 	if err := context.ShouldBindJSON(&newUser); err != nil {
@@ -22,6 +31,15 @@ func signUp(context *gin.Context) {
 	context.JSON(http.StatusCreated, gin.H{"message": "User created succesfully!", "user": newUser})
 }
 
+// LoginUser godoc
+// @Summary Login user
+// @Description This endpoint logs in a user
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param user body models.User true "Login Data"
+// @Success 200 {object} map[string]string
+// @Router /users/login [post]
 func login(context *gin.Context) {
 	var loginData models.User
 	err := context.ShouldBindJSON(&loginData)
@@ -42,6 +60,14 @@ func login(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": token})
 }
 
+// GetUserProfile godoc
+// @Summary Get user profile
+// @Description This endpoint retrieves the profile of the logged-in user
+// @Tags User
+// @Produce json
+// @Success 200 {object} models.User
+// @Router /users/profile [get]
+// @Security JWT
 func getUserProfile(context *gin.Context) {
 	userID := context.GetInt64("user_id")
 	user, err := models.GetUserByID(userID)
