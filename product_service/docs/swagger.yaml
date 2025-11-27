@@ -1,22 +1,183 @@
 definitions:
-  models.Product:
+  dto.CategoryResponseDTO:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.CreateCategoryRequestDTO:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateProductRequestDTO:
     properties:
       category_id:
-        type: integer
+        type: string
       description:
         type: string
-      id:
-        type: integer
       name:
         type: string
       price:
-        type: string
+        type: number
       stock_quantity:
+        type: integer
+    required:
+    - category_id
+    - description
+    - name
+    - price
+    - stock_quantity
+    type: object
+  dto.CreateProductResponse:
+    properties:
+      id:
         type: string
+      message:
+        type: string
+    type: object
+  dto.GetProductsResponseDTO:
+    properties:
+      products:
+        items:
+          $ref: '#/definitions/dto.ProductResponseDTO'
+        type: array
+    type: object
+  dto.ProductResponseDTO:
+    properties:
+      category_id:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      stock_quantity:
+        type: integer
+    type: object
+  dto.UpdateCategoryRequestDTO:
+    properties:
+      name:
+        type: string
+    type: object
+  dto.UpdateProductRequestDTO:
+    properties:
+      category_id:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      stock_quantity:
+        type: integer
     type: object
 info:
   contact: {}
+  description: This is the ShopSmart API.
+  title: ShopSmart API
+  version: "1.0"
 paths:
+  /categories:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.CategoryResponseDTO'
+            type: array
+      tags:
+      - Categories
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category to create
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCategoryRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CategoryResponseDTO'
+      security:
+      - BearerAuth: []
+      tags:
+      - Categories
+  /categories/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      tags:
+      - Categories
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CategoryResponseDTO'
+      tags:
+      - Categories
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Category to update
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCategoryRequestDTO'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      tags:
+      - Categories
   /products:
     get:
       consumes:
@@ -29,7 +190,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Product'
+              $ref: '#/definitions/dto.GetProductsResponseDTO'
             type: array
       summary: Get all Products
       tags:
@@ -44,10 +205,16 @@ paths:
         name: product
         required: true
         schema:
-          $ref: '#/definitions/models.Product'
+          $ref: '#/definitions/dto.CreateProductRequestDTO'
       produces:
       - application/json
-      responses: {}
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CreateProductResponse'
+      security:
+      - BearerAuth: []
       summary: Create a new Product
       tags:
       - Products
@@ -61,10 +228,12 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses: {}
+      security:
+      - BearerAuth: []
       summary: Delete a Product
       tags:
       - Products
@@ -77,18 +246,18 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Product'
+            $ref: '#/definitions/dto.ProductResponseDTO'
       summary: Get a Product by ID
       tags:
       - Products
-    put:
+    patch:
       consumes:
       - application/json
       description: update Product
@@ -97,17 +266,24 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Product to update
         in: body
         name: product
         required: true
         schema:
-          $ref: '#/definitions/models.Product'
+          $ref: '#/definitions/dto.UpdateProductRequestDTO'
       produces:
       - application/json
       responses: {}
+      security:
+      - BearerAuth: []
       summary: Update an existing Product
       tags:
       - Products
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

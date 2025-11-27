@@ -31,19 +31,19 @@ func CreateTables() {
 
 	//Create category table
 	createCategoryTableSQL := `CREATE TABLE IF NOT EXISTS categories (
-		"id" INTEGER PRIMARY KEY AUTOINCREMENT,
+		"id" TEXT PRIMARY KEY,
 		"name" VARCHAR NOT NULL
 	);`
 	ExecQuery(createCategoryTableSQL)
 
 	// Create products table
 	createProductTableSQL := `CREATE TABLE IF NOT EXISTS products (
-        "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+        "id" TEXT PRIMARY KEY,
         "name" VARCHAR NOT NULL,
         "description" TEXT NOT NULL,
         "price"  DOUBLE NOT NULL,
 		"stock_quantity" INTEGER NOT NULL,
-        "category_id" INTEGER,
+        "category_id" TEXT NOT NULL,
 		FOREIGN KEY (category_id) REFERENCES categories(id)
     );`
 	ExecQuery(createProductTableSQL)

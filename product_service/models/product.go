@@ -2,36 +2,33 @@ package models
 
 import (
 	"example.com/rest-api/db"
+	"example.com/rest-api/utils"
 )
 
 // these are the fields for product: name, description, price, category, stock quantity
 
 type Product struct {
-	ID            int    `json:"id"`
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	Price         string `json:"price"`
-	CategoryID    int    `json:"category_id"`
-	StockQuantity string `json:"stock_quantity"`
+	ID            string  `json:"id"`
+	Name          string  `json:"name"`
+	Description   string  `json:"description"`
+	Price         float32 `json:"price"`
+	CategoryID    string  `json:"category_id"`
+	StockQuantity int     `json:"stock_quantity"`
 }
 
 var products = []Product{}
 
-func (e *Product) Save() error {
+func (p *Product) Save() error {
 
-	query := `INSERT INTO products (name, description, price, category_id, stock_quantity) VALUES (?, ?, ?, ?, ?)`
+	query := `INSERT INTO products (id, name, description, price, category_id, stock_quantity) VALUES (?, ?, ?, ?, ?, ?)`
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(e.Name, e.Description, e.Price, e.CategoryID, e.StockQuantity)
-	if err != nil {
-		return err
-	}
-	id, err := res.LastInsertId()
-	e.ID = int(id)
+	p.ID = utils.GenerateUUID()
+	_, err = stmt.Exec(p.ID, p.Name, p.Description, p.Price, p.CategoryID, p.StockQuantity)
 	if err != nil {
 		return err
 	}
@@ -42,13 +39,16 @@ func (e *Product) Save() error {
 
 func GetAllproducts() ([]Product, error) {
 	query := `SELECT id, name, description, price, category_id, stock_quantity FROM products`
-	row, err := db.DB.Query(query)
+	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
 	}
-	for row.Next() {
+	defer rows.Close()
+
+	var products []Product
+	for rows.Next() {
 		var product Product
-		err := row.Scan(&product.ID, &product.Name, &product.Description, &product.Price, &product.CategoryID, &product.StockQuantity)
+		err := rows.Scan(&product.ID, &product.Name, &product.Description, &product.Price, &product.CategoryID, &product.StockQuantity)
 		if err != nil {
 			continue
 		}
@@ -57,7 +57,7 @@ func GetAllproducts() ([]Product, error) {
 	return products, nil
 }
 
-func GetProductByID(id int64) (*Product, error) {
+func GetProductByID(id string) (*Product, error) {
 	query := `SELECT id, name, description, price, category_id, stock_quantity FROM products WHERE id = ?`
 	row := db.DB.QueryRow(query, id)
 	if row == nil {
@@ -72,22 +72,22 @@ func GetProductByID(id int64) (*Product, error) {
 	return &product, nil
 }
 
-func (e Product) Update() error {
-	query := `UPDATE products SET name = ?, description = ?,  price = ?, category_id = ?, stock_quantity = ?, WHERE id = ?`
+func (p *Product) Update() error {
+	query := `UPDATE products SET name = ?, description = ?,  price = ?, category_id = ?, stock_quantity = ? WHERE id = ?`
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(e.Name, e.Description, e.Price, e.CategoryID, e.StockQuantity, e.ID)
+	_, err = stmt.Exec(p.Name, p.Description, p.Price, p.CategoryID, p.StockQuantity, p.ID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (e Product) Delete() error {
+func (p *Product) Delete() error {
 	query := `DELETE FROM products WHERE id = ?`
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
@@ -95,14 +95,14 @@ func (e Product) Delete() error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(e.ID)
+	_, err = stmt.Exec(p.ID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func GetProductsByCategoryID(categoryID int64) ([]Product, error) {
+func GetProductsByCategoryID(categoryID string) ([]Product, error) {
 	query := `SELECT id, name, description, price, category_id, stock_quantity FROM products WHERE category_id = ?`
 	rows, err := db.DB.Query(query, categoryID)
 	if err != nil {
