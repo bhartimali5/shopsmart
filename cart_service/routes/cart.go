@@ -1,0 +1,232 @@
+package routes
+
+import (
+	"net/http"
+
+	"example.com/rest-api/dto"
+	"example.com/rest-api/models"
+	"example.com/rest-api/utils"
+	"github.com/gin-gonic/gin"
+)
+
+// godoc
+// @Summary Add Item to Cart
+// @Description Adds an item to the user's cart
+// @Tags Cart
+// @Accept json
+// @Produce json
+// @Param item body dto.AddItemRequest true "Item to add"
+// @Router /cart/items [post]
+// @Security BearerAuth
+func AddItemToCart(c *gin.Context) {
+	userId := c.GetString("userId")
+	current_user_cart, _ := models.GetCartByUserId(userId)
+
+	if current_user_cart == (models.Cart{}) {
+		new_cart, err := models.CreateCart(models.Cart{UserId: userId})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		current_user_cart = new_cart
+	}
+	var newItem models.CartItem
+	if err := c.ShouldBindJSON(&newItem); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+	// Check if the product is already in the cart
+	product_id := newItem.ProductId
+	cart_items := models.GetCartItemsByCartId(current_user_cart.ID)
+	newItem.CartId = current_user_cart.ID
+
+	// Fetch product price from product service
+	productPrice, err := utils.FetchProductPrice(newItem.ProductId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch product price"})
+		return
+	}
+	//Total price for quantity
+	newItem.Price = float64(newItem.Quantity) * productPrice
+
+	for _, item := range cart_items {
+		if item.ProductId == product_id {
+			item.Quantity += cart_items[0].Quantity
+			item.Price = float64(item.Quantity) * productPrice
+
+			// Update the item quantity and price in the database
+			err := models.UpdateCartItemQuantity(item.ID, item.Quantity, item.Price)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, dto.AddItemResponse{
+				Message: "Item quantity has been updated in cart!",
+				Item: dto.CartItem{
+					ID:        item.ID,
+					ProductId: item.ProductId,
+					Quantity:  item.Quantity,
+					Price:     item.Price,
+				},
+			})
+			return
+		}
+	}
+
+	addedItem, err := models.AddItemToCart(newItem)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not add item to cart"})
+		return
+	}
+
+	response := dto.AddItemResponse{
+		Message: "Item has been added to cart!",
+		Item: dto.CartItem{
+			ID:        addedItem.ID,
+			ProductId: addedItem.ProductId,
+			Quantity:  addedItem.Quantity,
+			Price:     addedItem.Price,
+		},
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// godoc
+// @Summary Remove Item from Cart
+// @Description Removes an item from the user's cart
+// @Tags Cart
+// @Param itemId path string true "Item ID"
+// @Router /cart/items/{itemId} [delete]
+// @Security BearerAuth
+func RemoveItemFromCart(c *gin.Context) {
+	userId := c.GetString("userId")
+	current_user_cart, err := models.GetCartByUserId(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cart is empty!"})
+		return
+	}
+	if current_user_cart == (models.Cart{}) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
+		return
+	}
+	itemId := c.Param("itemId")
+	err = models.RemoveItemFromCart(itemId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not remove item from cart"})
+		return
+	}
+	c.JSON(http.StatusOK, dto.RemoveItemResponse{
+		Message: "Item has been removed from cart!",
+		ItemId:  itemId,
+	})
+}
+
+// godoc
+// @Summary View Cart
+// @Description Retrieves the user's cart and its items
+// @Tags Cart
+// @Accept       json
+// @Produce      json
+// @Success      200  {array} dto.CartItem
+// @Router /cart/items [get]
+// @Security BearerAuth
+func ViewCart(c *gin.Context) {
+	userId := c.GetString("userId")
+	current_user_cart, err := models.GetCartByUserId(userId)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"Message": "Cart is empty!"})
+		return
+	}
+	if current_user_cart == (models.Cart{}) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
+		return
+	}
+	cartItems := models.GetCartItemsByCartId(current_user_cart.ID)
+	c.JSON(http.StatusOK, gin.H{"cart": current_user_cart, "items": cartItems})
+}
+
+// godoc
+// @Summary Clear Cart
+// @Description Removes all items from the user's cart
+// @Tags Cart
+// @Router /cart/clear [delete]
+// @Security BearerAuth
+func ClearCart(c *gin.Context) {
+	userId := c.GetString("userId")
+	current_user_cart, err := models.GetCartByUserId(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cart is empty!"})
+		return
+	}
+	if current_user_cart == (models.Cart{}) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
+		return
+	}
+	err = models.ClearCart(current_user_cart.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not clear cart"})
+		return
+	}
+	c.JSON(http.StatusOK, dto.ClearCartResponse{
+		Message: "Cart has been cleared!",
+	})
+}
+
+// godoc
+// @Summary Update Cart Item Quantity
+// @Description Updates the quantity of a specific item in the user's cart
+// @Tags Cart
+// @Accept json
+// @Produce json
+// @Param itemId path string true "Item ID"
+// @Param item body dto.UpdateItemRequest true "Updated item quantity"
+// @Router /cart/items/{itemId} [patch]
+// @Security BearerAuth
+func UpdateCartItemQuantity(c *gin.Context) {
+	userId := c.GetString("userId")
+	cartItemId := c.Param("itemId")
+
+	// Verify that the cart item belongs to the user's cart
+	current_user_cart, err := models.GetCartByUserId(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cart is empty!"})
+		return
+	}
+	if current_user_cart == (models.Cart{}) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
+		return
+	}
+	var updateRequest dto.UpdateItemRequest
+	if err := c.ShouldBindJSON(&updateRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	cartItem, err := models.GetCartItemById(cartItemId)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Cart item not found"})
+		return
+	}
+	if cartItem.CartId != current_user_cart.ID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to modify this item"})
+		return
+	}
+
+	// Fetch product price from product service
+	productPrice, err := utils.FetchProductPrice(cartItem.ProductId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch product price"})
+		return
+	}
+
+	newPrice := float64(updateRequest.Quantity) * productPrice
+
+	err = models.UpdateCartItemQuantity(cartItemId, updateRequest.Quantity, newPrice)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not update item quantity"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Item quantity has been updated in cart!"})
+}
