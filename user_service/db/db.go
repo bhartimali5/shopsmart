@@ -31,16 +31,16 @@ func CreateTables() {
 
 	// Create users table
 	createUsersTabelSQL := `CREATE TABLE IF NOT EXISTS users (
-		"id" INTEGER PRIMARY KEY AUTOINCREMENT,
-		"UserName" VARCHAR(100),
+		"id" TEXT PRIMARY KEY ,
 		"email" TEXT NOT NULL UNIQUE,
-		"password" TEXT NOT NULL
+		"password" TEXT NOT NULL,
+		"role" VARCHAR(20) NOT NULL DEFAULT 'user'
 	);`
 	ExecQuery(createUsersTabelSQL)
 
 	//Create address table
 	createAddressTableSQL := `CREATE TABLE IF NOT EXISTS addresses (
-		"id" INTEGER PRIMARY KEY AUTOINCREMENT,
+		"id" TEXT PRIMARY KEY,
 		"name" VARCHAR(100),
 		"address" TEXT,
 		"user_id" INTEGER,

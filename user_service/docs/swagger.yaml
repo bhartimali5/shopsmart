@@ -1,44 +1,65 @@
 definitions:
-  models.User:
+  dto.GetUserProfileResponseDTO:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  dto.UpdateUserProfileDTO:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.UserLoginDTO:
     properties:
       email:
         type: string
-      id:
-        type: integer
       password:
-        type: string
-      username:
         type: string
     required:
     - email
     - password
     type: object
+  dto.UserLoginResponseDTO:
+    properties:
+      message:
+        type: string
+      token:
+        type: string
+    type: object
+  dto.UserSignupDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.UserSignupResponseDTO:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+    type: object
 info:
   contact: {}
+  description: This is the ShopSmart API.
+  title: ShopSmart API
+  version: "1.0"
 paths:
-  /users:
-    post:
-      consumes:
-      - application/json
-      description: This endpoint registers a user
-      parameters:
-      - description: User Data
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.User'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.User'
-      summary: Create new user
-      tags:
-      - User
-  /users/login:
+  /login:
     post:
       consumes:
       - application/json
@@ -49,20 +70,40 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.User'
+          $ref: '#/definitions/dto.UserLoginDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.UserLoginResponseDTO'
       summary: Login user
       tags:
       - User
-  /users/profile:
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint registers a user
+      parameters:
+      - description: User Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserSignupDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserSignupResponseDTO'
+      summary: Create new user
+      tags:
+      - User
+  /user/profile:
     get:
       description: This endpoint retrieves the profile of the logged-in user
       produces:
@@ -71,10 +112,38 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.User'
+            $ref: '#/definitions/dto.GetUserProfileResponseDTO'
       security:
-      - JWT: []
+      - BearerAuth: []
       summary: Get user profile
       tags:
       - User
+    patch:
+      consumes:
+      - application/json
+      description: This endpoint updates the profile of the logged-in user
+      parameters:
+      - description: Update User Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserProfileDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GetUserProfileResponseDTO'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - User
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

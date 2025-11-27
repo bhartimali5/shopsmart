@@ -9,4 +9,5 @@ func RegisterRoutes(server *gin.Engine) {
 	server.POST("signup", signUp)
 	server.POST("login", login)
 	server.GET("/user/profile", middlewares.AuthMiddleware, getUserProfile)
+	server.PATCH("/user/profile", middlewares.AuthMiddleware, UpdateUserProfile)
 }

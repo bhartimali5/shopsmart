@@ -8,14 +8,14 @@ import (
 )
 
 type User struct {
-	ID       int    `json:"id"`
-	UserName string `json:"username"`
+	ID       string `json:"id"`
 	Email    string `binding:"required" json:"email"`
 	Password string `json:"password" binding:"required"`
+	Role     string `json:"role"`
 }
 
 func (u *User) Save() error {
-	query := `INSERT INTO users (email, password) VALUES (?, ?)`
+	query := `INSERT INTO users (id, email, password) VALUES (?, ?, ?)`
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
 		return err
@@ -28,13 +28,8 @@ func (u *User) Save() error {
 		return err
 	}
 	u.Password = hashedPassword
-
-	res, err := stmt.Exec(u.Email, u.Password)
-	if err != nil {
-		return err
-	}
-	id, err := res.LastInsertId()
-	u.ID = int(id)
+	u.ID = utils.GenerateUUID()
+	_, err = stmt.Exec(u.ID, u.Email, u.Password)
 	if err != nil {
 		return err
 	}
@@ -42,15 +37,15 @@ func (u *User) Save() error {
 	return nil
 }
 
-func GetUserByID(id int64) (*User, error) {
-	query := `SELECT id, email, password FROM users WHERE id = ?`
+func GetUserByID(id string) (*User, error) {
+	query := `SELECT id, email, role FROM users WHERE id = ?`
 	row := db.DB.QueryRow(query, id)
 	if row == nil {
 		return nil, nil
 	}
 
 	var user User
-	err := row.Scan(&user.ID, &user.Email, &user.Password)
+	err := row.Scan(&user.ID, &user.Email, &user.Role)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +54,7 @@ func GetUserByID(id int64) (*User, error) {
 }
 
 func GetAllUsers() ([]User, error) {
-	query := `SELECT id, email, password FROM users`
+	query := `SELECT id, email, role FROM users`
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -67,7 +62,7 @@ func GetAllUsers() ([]User, error) {
 	var users []User
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.ID, &user.Email, &user.Password)
+		err := rows.Scan(&user.ID, &user.Email, &user.Role)
 		if err != nil {
 			continue
 		}
@@ -76,22 +71,38 @@ func GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func (u *User) ValidateCredentials() error {
-	query := `SELECT id, password FROM users WHERE email = ?`
-	row := db.DB.QueryRow(query, u.Email)
+func (u *User) ValidateCredentials() (*string, error) {
+	query := `SELECT id, password, role FROM users WHERE email = ?`
+	row := db.DB.QueryRow(query, u.Email, u.Role)
 	if row == nil {
-		return nil
+		return nil, nil
 	}
 
 	var hashedPassword string
-	err := row.Scan(&u.ID, &hashedPassword)
+	err := row.Scan(&u.ID, &hashedPassword, &u.Role)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	isPasswordValid := utils.CheckPasswordHash(u.Password, hashedPassword)
 	if !isPasswordValid {
-		return errors.New("invalid credentials")
+		return nil, errors.New("invalid credentials")
 	}
+	return &u.Role, nil
+}
+
+func (u *User) Update() error {
+	query := `UPDATE users SET email = ?, role = ? WHERE id = ?`
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(u.Email, u.Role, u.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
