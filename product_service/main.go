@@ -10,6 +10,13 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title ShopSmart API
+// @version 1.0
+// @description This is the ShopSmart API.
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	db.InitDB()
 	db.CreateTables()
@@ -19,5 +26,5 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/"
 	routes.RegisterRoutes(server)
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	server.Run(":8080")
+	server.Run(":8000")
 }

@@ -2,8 +2,8 @@ package routes
 
 import (
 	"net/http"
-	"strconv"
 
+	"example.com/rest-api/dto"
 	"example.com/rest-api/models"
 	"github.com/gin-gonic/gin"
 )
@@ -14,15 +14,29 @@ import (
 // @Tags         Products
 // @Accept       json
 // @Produce      json
-// @Success      200  {array}   models.Product
+// @Success      200  {array}   dto.GetProductsResponseDTO
 // @Router       /products [get]
+// @Security BearerAuth
 func getProducts(context *gin.Context) {
 	Products, err := models.GetAllproducts()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch Products"})
 		return
 	}
-	context.JSON(http.StatusOK, Products)
+	response := dto.GetProductsResponseDTO{}
+	products := []dto.ProductResponseDTO{}
+	for _, product := range Products {
+		products = append(products, dto.ProductResponseDTO{
+			ID:            product.ID,
+			Name:          product.Name,
+			Description:   product.Description,
+			Price:         product.Price,
+			CategoryID:    product.CategoryID,
+			StockQuantity: product.StockQuantity,
+		})
+	}
+	response.Products = products
+	context.JSON(http.StatusOK, response)
 }
 
 // GetProductByID godoc
@@ -31,16 +45,13 @@ func getProducts(context *gin.Context) {
 // @Tags         Products
 // @Accept       json
 // @Produce      json
-// @Param        id   path      int  true  "Product ID"
-// @Success      200  {object}  models.Product
+// @Param        id   path      string  true  "Product ID"
+// @Success      200  {object}  dto.ProductResponseDTO
 // @Router       /products/{id} [get]
+// @Security BearerAuth
 func getProductByID(context *gin.Context) {
 
-	ProductId, err := strconv.ParseInt(context.Param("id"), 10, 64)
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
-		return
-	}
+	ProductId := context.Param("id")
 	product, err := models.GetProductByID(ProductId)
 	if product == nil {
 		context.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
@@ -60,23 +71,33 @@ func getProductByID(context *gin.Context) {
 // @Tags         Products
 // @Accept       json
 // @Produce      json
-// @Param        product  body      models.Product  true  "Product to create"
+// @Param        product  body      dto.CreateProductRequestDTO  true  "Product to create"
+// @Success      201  {object}  dto.CreateProductResponse
 // @Router       /products [post]
+// @Security BearerAuth
 func createProducts(context *gin.Context) {
 	var newProduct models.Product
 	if err := context.ShouldBindJSON(&newProduct); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	// check if category_id exists
+	_, err := models.GetCategoryByID(newProduct.CategoryID)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Category doesn't exists"})
+		return
+	}
 
-	category_id := context.GetInt64("category_id")
-	newProduct.CategoryID = int(category_id)
-	err := newProduct.Save()
+	err = newProduct.Save()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	context.JSON(http.StatusCreated, gin.H{"message": "Product created succesfully!", "product": newProduct})
+	response := dto.CreateProductResponse{
+		ID:      newProduct.ID,
+		Message: "Product created successfully!",
+	}
+	context.JSON(http.StatusCreated, response)
 }
 
 // UpdateProduct godoc
@@ -85,33 +106,49 @@ func createProducts(context *gin.Context) {
 // @Tags         Products
 // @Accept       json
 // @Produce      json
-// @Param        id       path      int             true  "Product ID"
-// @Param        product  body      models.Product  true  "Product to update"
-// @Router       /products/{id} [put]
+// @Param        id       path      string             true  "Product ID"
+// @Param        product  body      dto.UpdateProductRequestDTO  true  "Product to update"
+// @Router       /products/{id} [patch]
+// @Security BearerAuth
 func updateProduct(context *gin.Context) {
-	ProductId, err := strconv.ParseInt(context.Param("id"), 10, 64)
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
-		return
-	}
+	ProductId := context.Param("id")
 
-	category_id := context.GetInt64("category_id")
-	product, err := models.GetProductByID(ProductId)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch product"})
-		return
-	}
-	if int64(product.CategoryID) != category_id {
-		context.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to update this product"})
-		return
-	}
-	var updatedProduct models.Product
+	var updatedProduct dto.UpdateProductRequestDTO
 	if err := context.ShouldBindJSON(&updatedProduct); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	updatedProduct.ID = int(ProductId)
-	err = updatedProduct.Update()
+	product, err := models.GetProductByID(ProductId)
+	if product == nil {
+		context.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch product"})
+		return
+	}
+	product.ID = ProductId
+	if updatedProduct.Name != nil {
+		product.Name = *updatedProduct.Name
+	}
+	if updatedProduct.Description != nil {
+		product.Description = *updatedProduct.Description
+	}
+	if updatedProduct.Price != nil {
+		product.Price = *updatedProduct.Price
+	}
+	if updatedProduct.StockQuantity != nil {
+		product.StockQuantity = *updatedProduct.StockQuantity
+	}
+	if updatedProduct.CategoryID != nil {
+		_, err := models.GetCategoryByID(*updatedProduct.CategoryID)
+		if err != nil {
+			context.JSON(http.StatusInternalServerError, gin.H{"error": "Category doesn't exists"})
+			return
+		}
+		product.CategoryID = *updatedProduct.CategoryID
+	}
+	err = product.Update()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -125,23 +162,14 @@ func updateProduct(context *gin.Context) {
 // @Tags         Products
 // @Accept       json
 // @Produce      json
-// @Param        id   path      int  true  "Product ID"
+// @Param        id   path      string  true  "Product ID"
 // @Router       /products/{id} [delete]
+// @Security BearerAuth
 func deleteProduct(context *gin.Context) {
-	ProductId, err := strconv.ParseInt(context.Param("id"), 10, 64)
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
-		return
-	}
-	categoryID := context.GetInt64("category_id")
+	ProductId := context.Param("id")
 	product, err := models.GetProductByID(ProductId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch product"})
-		return
-	}
-
-	if product.CategoryID != int(categoryID) {
-		context.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this product"})
 		return
 	}
 
