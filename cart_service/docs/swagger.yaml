@@ -1,0 +1,127 @@
+definitions:
+  dto.AddItemRequest:
+    properties:
+      product_id:
+        type: string
+      quantity:
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  dto.CartItem:
+    properties:
+      id:
+        type: string
+      price:
+        type: number
+      product_id:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  dto.UpdateItemRequest:
+    properties:
+      quantity:
+        type: integer
+    required:
+    - quantity
+    type: object
+info:
+  contact: {}
+  description: This is the ShopSmart API.
+  title: ShopSmart API
+  version: "1.0"
+paths:
+  /cart/clear:
+    delete:
+      description: Removes all items from the user's cart
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Clear Cart
+      tags:
+      - Cart
+  /cart/items:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the user's cart and its items
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.CartItem'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: View Cart
+      tags:
+      - Cart
+    post:
+      consumes:
+      - application/json
+      description: Adds an item to the user's cart
+      parameters:
+      - description: Item to add
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddItemRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Add Item to Cart
+      tags:
+      - Cart
+  /cart/items/{itemId}:
+    delete:
+      description: Removes an item from the user's cart
+      parameters:
+      - description: Item ID
+        in: path
+        name: itemId
+        required: true
+        type: string
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Remove Item from Cart
+      tags:
+      - Cart
+    patch:
+      consumes:
+      - application/json
+      description: Updates the quantity of a specific item in the user's cart
+      parameters:
+      - description: Item ID
+        in: path
+        name: itemId
+        required: true
+        type: string
+      - description: Updated item quantity
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateItemRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Update Cart Item Quantity
+      tags:
+      - Cart
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
