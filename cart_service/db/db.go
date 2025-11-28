@@ -34,7 +34,9 @@ func CreateTables() {
 		"id" TEXT PRIMARY KEY ,
 		"user_id" TEXT NOT NULL,
 		"created_at" TEXT,
-		"updated_at" TEXT
+		"updated_at" TEXT,
+		"is_active" INTEGER NOT NULL DEFAULT 1
+		
 	);`
 	ExecQuery(createCartTableSQL)
 

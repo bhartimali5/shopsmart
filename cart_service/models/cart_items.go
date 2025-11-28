@@ -87,7 +87,7 @@ func ClearCart(cartId string) error {
 	return nil
 }
 
-func UpdateCartItemQuantity(itemId string, quantity int, price float64) error {
+func UpdateCartItem(itemId string, quantity int, price float64) error {
 	query := `UPDATE cart_items SET quantity = ?, price = ? WHERE id = ? `
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
