@@ -31,21 +31,14 @@ func CreateTables() {
 
 	// Create order table
 	CreateOrderTableQuery := `CREATE TABLE IF NOT EXISTS orders (
-		id TEXT PRIMARY KEY NOT NULL,
+		id TEXT NOT NULL,
 		user_id TEXT NOT NULL,
 		order_date TEXT NOT NULL,
 		cart_id TEXT NOT NULL,
 		status TEXT,
-		total_amount REAL NOT NULL
+		total_amount REAL NOT NULL,
+		PRIMARY KEY (user_id, cart_id	)
 	);`
 	ExecQuery(CreateOrderTableQuery)
-
-	//Create user_orders relation table
-	CreateUserOrdersTableQuery := `CREATE TABLE IF NOT EXISTS user_orders (
-		user_id TEXT NOT NULL,
-		order_id TEXT NOT NULL,
-		PRIMARY KEY (user_id, order_id)
-	);`
-	ExecQuery(CreateUserOrdersTableQuery)
 
 }

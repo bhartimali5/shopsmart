@@ -1,9 +1,72 @@
+definitions:
+  dto.CreateOrderResponseDTO:
+    properties:
+      order_date:
+        type: string
+      status:
+        type: string
+      total_price:
+        type: number
+      user_id:
+        type: string
+    required:
+    - order_date
+    - total_price
+    - user_id
+    type: object
+  dto.GetOrdersResponseDTO:
+    properties:
+      orders:
+        items:
+          $ref: '#/definitions/dto.OrderResponseDTO'
+        type: array
+    type: object
+  dto.OrderResponseDTO:
+    properties:
+      cart_id:
+        type: string
+      id:
+        type: string
+      order_date:
+        type: string
+      status:
+        type: string
+      total_price:
+        type: number
+      user_id:
+        type: string
+    type: object
 info:
   contact: {}
   description: This is the ShopSmart API.
   title: ShopSmart API
   version: "1.0"
-paths: {}
+paths:
+  /orders:
+    get:
+      description: Retrieve all orders for a specific user
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GetOrdersResponseDTO'
+      security:
+      - BearerAuth: []
+      summary: Get User Orders
+      tags:
+      - Orders
+    post:
+      description: Create a new order for a specific user
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CreateOrderResponseDTO'
+      security:
+      - BearerAuth: []
+      summary: Create User Order
+      tags:
+      - Orders
 securityDefinitions:
   BearerAuth:
     in: header

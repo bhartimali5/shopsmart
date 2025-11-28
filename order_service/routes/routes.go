@@ -9,9 +9,8 @@ func RegisterRoutes(server *gin.Engine) {
 	authenticated := server.Group("/")
 	authenticated.Use(middlewares.AuthMiddleware)
 
-	userRoutes := authenticated.Group("/users")
 	{
-		userRoutes.GET("/:user_id/orders", GetUserOrders)
-		userRoutes.POST("/:user_id/orders", CreateUserOrder)
+		authenticated.GET("/orders", GetCurrentUserOrders)
+		authenticated.POST("/orders", CreateUserOrder)
 	}
 }
