@@ -67,7 +67,7 @@ func GetActiveCartByUserId(userId string) (Cart, error) {
 	return cart, nil
 }
 
-func ClearCartRec(cartId string) error {
+func DeleteUserCart(cartId string) error {
 	query := `DELETE FROM carts WHERE id = ?`
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {

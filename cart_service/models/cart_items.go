@@ -73,7 +73,7 @@ func GetCartItemById(itemId string) (CartItem, error) {
 	return item, nil
 }
 
-func ClearCart(cartId string) error {
+func RemoveAllItemsFromCart(cartId string) error {
 	query := `DELETE FROM cart_items WHERE cart_id = ?`
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
