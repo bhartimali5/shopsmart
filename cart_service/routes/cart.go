@@ -198,12 +198,12 @@ func ClearCart(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Cart not found"})
 		return
 	}
-	err = models.ClearCart(current_user_cart.ID)
+	err = models.RemoveAllItemsFromCart(current_user_cart.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not clear cart"})
 		return
 	}
-	err = models.ClearCartRec(current_user_cart.ID)
+	err = models.DeleteUserCart(current_user_cart.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not clear cart"})
 		return
