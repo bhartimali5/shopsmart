@@ -36,6 +36,13 @@ definitions:
       user_id:
         type: string
     type: object
+  dto.UpdateOrderStatusRequestDTO:
+    properties:
+      status:
+        type: string
+    required:
+    - status
+    type: object
 info:
   contact: {}
   description: This is the ShopSmart API.
@@ -65,6 +72,27 @@ paths:
       security:
       - BearerAuth: []
       summary: Create User Order
+      tags:
+      - Orders
+  /orders/{order_id}/status:
+    patch:
+      description: Update the status of an existing order
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: string
+      - description: New Status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateOrderStatusRequestDTO'
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Update Order Status
       tags:
       - Orders
 securityDefinitions:
