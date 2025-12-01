@@ -12,5 +12,6 @@ func RegisterRoutes(server *gin.Engine) {
 	{
 		authenticated.GET("/orders", GetCurrentUserOrders)
 		authenticated.POST("/orders", CreateUserOrder)
+		authenticated.PATCH("/orders/:order_id/status", UpdateOrderStatus)
 	}
 }

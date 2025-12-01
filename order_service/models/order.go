@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql"
+
 	"example.com/rest-api/db"
 	"example.com/rest-api/utils"
 )
@@ -23,6 +25,32 @@ func (o *Order) Save() error {
 	return err
 }
 
+// Save by using transaction
+func (o *Order) SaveTx() (*sql.Tx, error) {
+	query := `INSERT INTO orders (id, user_id, order_date, cart_id, status, total_amount) 
+			  VALUES (?, ?, ?, ?, ?, ?)`
+
+	o.ID = utils.GenerateUUID()
+	tx, err := db.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	_, err = tx.Exec(query, o.ID, o.UserID, o.OrderDate, o.CartID, o.Status, o.TotalAmount)
+	return tx, err
+}
+
+func GetOrderByID(orderID string) (*Order, error) {
+	query := `SELECT id, user_id, order_date, cart_id, status, total_amount 
+			  FROM orders WHERE id = ?`
+	row := db.DB.QueryRow(query, orderID)
+
+	var order Order
+	if err := row.Scan(&order.ID, &order.UserID, &order.OrderDate, &order.CartID, &order.Status, &order.TotalAmount); err != nil {
+		return nil, err
+	}
+	return &order, nil
+}
+
 func GetOrdersByUserID(userID string) ([]Order, error) {
 	query := `SELECT id, user_id, order_date, cart_id, status, total_amount 
 			  FROM orders WHERE user_id = ?`
@@ -41,4 +69,10 @@ func GetOrdersByUserID(userID string) ([]Order, error) {
 		orders = append(orders, order)
 	}
 	return orders, nil
+}
+
+func (o *Order) UpdateStatus() error {
+	query := `UPDATE orders SET status = ? WHERE id = ?`
+	_, err := db.DB.Exec(query, o.Status, o.ID)
+	return err
 }
