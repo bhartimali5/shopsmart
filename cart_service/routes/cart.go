@@ -29,9 +29,9 @@ func AddItemToCart(c *gin.Context) {
 	}
 	product_id := newItem.ProductId
 	// Fetch product price from product service
-	productPrice, err := utils.FetchProductPrice(newItem.ProductId)
+	productPrice, err := utils.FetchProductPrice(newItem.ProductId, c.GetHeader("Authorization"))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch product price"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -254,7 +254,7 @@ func UpdateCartItemQuantity(c *gin.Context) {
 	}
 
 	// Fetch product price from product service
-	productPrice, err := utils.FetchProductPrice(cartItem.ProductId)
+	productPrice, err := utils.FetchProductPrice(cartItem.ProductId, c.GetHeader("Authorization"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch product price"})
 		return
