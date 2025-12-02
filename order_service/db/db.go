@@ -37,7 +37,7 @@ func CreateTables() {
 		cart_id TEXT NOT NULL,
 		status TEXT,
 		total_amount REAL NOT NULL,
-		PRIMARY KEY (user_id, cart_id	)
+		PRIMARY KEY (user_id, cart_id)
 	);`
 	ExecQuery(CreateOrderTableQuery)
 

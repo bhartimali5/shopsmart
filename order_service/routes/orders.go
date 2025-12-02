@@ -1,11 +1,13 @@
 package routes
 
 import (
+	"encoding/json"
 	"net/http"
 	"reflect"
 
 	"example.com/rest-api/dto"
 	"example.com/rest-api/models"
+	"example.com/rest-api/rabbitmq"
 	"example.com/rest-api/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -81,27 +83,30 @@ func CreateUserOrder(c *gin.Context) {
 		TotalAmount: cartDetails.Cart.TotalPrice,
 		CartID:      cartDetails.Items[0].CartId,
 	}
-	// Save order using transaction
+	// save order using transaction
 	tx, err := order.SaveTx()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	defer tx.Rollback()
 
-	// Clear user's cart after order creation
-	err = utils.ClearUserCart(userId, c.GetHeader("Authorization"))
+	// Pulish a messge with order details to RabbitMQ Exchange
+	orderMessage, err := json.Marshal(order)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not clear user cart"})
-		// Rollback: the created order if cart clearing fails
-		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not marshal order message"})
 		return
 	}
 	err = tx.Commit()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not finalize order creation"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not commit transaction"})
 		return
 	}
-
+	err = rabbitmq.PublishEvent("exchange", "topic", orderMessage, "order.created")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not publish order message"})
+		return
+	}
 	c.JSON(http.StatusCreated, dto.CreateOrderResponseDTO{
 		UserID:      order.UserID,
 		OrderDate:   order.OrderDate,
