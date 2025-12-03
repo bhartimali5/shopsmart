@@ -9,6 +9,11 @@
     "paths": {
         "/categories": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -68,6 +73,11 @@
         },
         "/categories/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -159,6 +169,11 @@
         },
         "/products": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get Products",
                 "consumes": [
                     "application/json"
@@ -222,6 +237,11 @@
         },
         "/products/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get Product by ID",
                 "consumes": [
                     "application/json"

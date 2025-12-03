@@ -45,6 +45,7 @@ func createCategory(context *gin.Context) {
 // @Produce      json
 // @Success      200  {array}   dto.CategoryResponseDTO
 // @Router       /categories [get]
+// @Security BearerAuth
 func getCategories(context *gin.Context) {
 	categories, err := models.GetAllCategories()
 	if err != nil {
@@ -69,6 +70,7 @@ func getCategories(context *gin.Context) {
 // @Param        id   path      string  true  "Category ID"
 // @Success      200  {object}  dto.CategoryResponseDTO
 // @Router       /categories/{id} [get]
+// @Security BearerAuth
 func getCategoryByID(context *gin.Context) {
 	categoryId := context.Param("id")
 	category, err := models.GetCategoryByID(categoryId)

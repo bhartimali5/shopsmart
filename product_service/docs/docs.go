@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/categories": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -76,6 +81,11 @@ const docTemplate = `{
         },
         "/categories/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -167,6 +177,11 @@ const docTemplate = `{
         },
         "/products": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get Products",
                 "consumes": [
                     "application/json"
@@ -230,6 +245,11 @@ const docTemplate = `{
         },
         "/products/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get Product by ID",
                 "consumes": [
                     "application/json"
