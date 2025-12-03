@@ -98,6 +98,8 @@ paths:
             items:
               $ref: '#/definitions/dto.CategoryResponseDTO'
             type: array
+      security:
+      - BearerAuth: []
       tags:
       - Categories
     post:
@@ -154,6 +156,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.CategoryResponseDTO'
+      security:
+      - BearerAuth: []
       tags:
       - Categories
     patch:
@@ -192,6 +196,8 @@ paths:
             items:
               $ref: '#/definitions/dto.GetProductsResponseDTO'
             type: array
+      security:
+      - BearerAuth: []
       summary: Get all Products
       tags:
       - Products
@@ -254,6 +260,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.ProductResponseDTO'
+      security:
+      - BearerAuth: []
       summary: Get a Product by ID
       tags:
       - Products
