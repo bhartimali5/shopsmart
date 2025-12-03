@@ -36,6 +36,10 @@ func (o *Order) SaveTx() (*sql.Tx, error) {
 		return nil, err
 	}
 	_, err = tx.Exec(query, o.ID, o.UserID, o.OrderDate, o.CartID, o.Status, o.TotalAmount)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
 	return tx, err
 }
 

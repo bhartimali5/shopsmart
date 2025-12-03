@@ -81,3 +81,17 @@ func DeleteUserCart(cartId string) error {
 	return nil
 
 }
+
+func DeactivateCart(cartId string) error {
+	query := `UPDATE carts SET is_active = 0 WHERE id = ? `
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(cartId)
+	if err != nil {
+		panic(err)
+	}
+	return nil
+}

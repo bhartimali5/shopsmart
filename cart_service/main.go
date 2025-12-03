@@ -1,6 +1,7 @@
 package main
 
 import (
+	"example.com/rest-api/consumers"
 	"example.com/rest-api/db"
 	"example.com/rest-api/routes"
 	"github.com/gin-gonic/gin"
@@ -23,8 +24,12 @@ func main() {
 
 	server := gin.Default()
 
+	// Start the order event consumer
+	go consumers.OrderEventConsumer()
+
 	docs.SwaggerInfo.BasePath = "/"
 	routes.RegisterRoutes(server)
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	server.Run(":8080")
+
 }

@@ -15,9 +15,17 @@ type ProductDetails struct {
 	// Add other product fields as needed
 }
 
-func FetchProductPrice(productId string) (float64, error) {
+func FetchProductPrice(productId string, auth_token string) (float64, error) {
 	url := fmt.Sprintf("http://localhost:8000/products/%s", productId)
-	resp, err := http.Get(url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", auth_token)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return 0, err
 	}
