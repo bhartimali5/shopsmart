@@ -30,7 +30,6 @@ func (o *Order) SaveTx() (*sql.Tx, error) {
 	query := `INSERT INTO orders (id, user_id, order_date, cart_id, status, total_amount) 
 			  VALUES (?, ?, ?, ?, ?, ?)`
 
-	o.ID = utils.GenerateUUID()
 	tx, err := db.DB.Begin()
 	if err != nil {
 		return nil, err
@@ -76,7 +75,11 @@ func GetOrdersByUserID(userID string) ([]Order, error) {
 }
 
 func (o *Order) UpdateStatus() error {
-	query := `UPDATE orders SET status = ? WHERE id = ?`
-	_, err := db.DB.Exec(query, o.Status, o.ID)
+	query := `UPDATE orders SET status = ? , updated_at = ? WHERE id = ?`
+	updated_at, err := utils.GetCurrentTime()
+	if err != nil {
+		return err
+	}
+	_, err = db.DB.Exec(query, o.Status, updated_at, o.ID)
 	return err
 }

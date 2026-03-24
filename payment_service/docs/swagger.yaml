@@ -1,9 +1,51 @@
+definitions:
+  dto.PaymentListResponseDTO:
+    properties:
+      payments_list:
+        items:
+          $ref: '#/definitions/dto.PaymentResponseDTO'
+        type: array
+    type: object
+  dto.PaymentResponseDTO:
+    properties:
+      cart_id:
+        type: string
+      created_at:
+        type: string
+      order_id:
+        type: string
+      payment_status:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
 info:
   contact: {}
   description: This is the ShopSmart API.
   title: ShopSmart API
   version: "1.0"
-paths: {}
+paths:
+  /payments:
+    get:
+      consumes:
+      - application/json
+      description: get Payments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PaymentListResponseDTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all Payments for user
+      tags:
+      - Payments
 securityDefinitions:
   BearerAuth:
     in: header

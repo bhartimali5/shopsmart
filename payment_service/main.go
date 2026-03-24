@@ -1,6 +1,7 @@
 package main
 
 import (
+	"example.com/rest-api/consumers"
 	"example.com/rest-api/db"
 	"example.com/rest-api/routes"
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,9 @@ func main() {
 	db.CreateTables()
 
 	server := gin.Default()
+
+	go consumers.OrderEventConsumer()
+
 	docs.SwaggerInfo.BasePath = "/"
 	routes.RegisterRoutes(server)
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
