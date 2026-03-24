@@ -11,7 +11,7 @@ import (
 )
 
 func OrderEventConsumer() {
-	order, err := rabbitmq.ConsumeEvents("exchange", "order", "topic", "order.created")
+	order, err := rabbitmq.ConsumeEvents("exchange", "order_event_queue", "topic", "order.created")
 	if err != nil {
 		log.Fatalf("Failed to start consuming order events: %v", err)
 	}
@@ -48,6 +48,7 @@ func handleOrderCreated(_ context.Context, orderEvent dto.OrderEvent) error {
 
 	// Mark the cart as inactive
 	err = models.DeactivateCart(userCart.ID)
+	log.Println("user id is :", userCart.ID)
 	if err != nil {
 		return err
 	}

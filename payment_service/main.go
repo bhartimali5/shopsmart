@@ -23,12 +23,12 @@ func main() {
 	db.CreateTables()
 
 	server := gin.Default()
-	// Start the order event consumer
-	go consumers.PaymentStatusConsumer()
+
+	go consumers.OrderEventConsumer()
 
 	docs.SwaggerInfo.BasePath = "/"
 	routes.RegisterRoutes(server)
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	server.Run(":8002")
+	server.Run(":8003")
 }

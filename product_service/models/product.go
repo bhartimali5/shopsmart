@@ -16,8 +16,6 @@ type Product struct {
 	StockQuantity int     `json:"stock_quantity"`
 }
 
-var products = []Product{}
-
 func (p *Product) Save() error {
 
 	query := `INSERT INTO products (id, name, description, price, category_id, stock_quantity) VALUES (?, ?, ?, ?, ?, ?)`

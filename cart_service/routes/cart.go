@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
 
 	"example.com/rest-api/dto"
@@ -41,7 +40,7 @@ func AddItemToCart(c *gin.Context) {
 	if current_user_cart == (models.Cart{}) {
 		new_cart, err := models.CreateCart(models.Cart{UserId: userId})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create cart"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		current_user_cart = new_cart
@@ -174,7 +173,6 @@ func ViewCart(c *gin.Context) {
 	for items := range cartItems {
 		totalAmount += cartItems[items].Price
 	}
-	fmt.Println(current_user_cart, totalAmount)
 	c.JSON(http.StatusOK, gin.H{"cart": CartData{
 		UserId:     userId,
 		TotalPrice: totalAmount,

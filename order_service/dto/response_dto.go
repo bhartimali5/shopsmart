@@ -19,3 +19,11 @@ type OrderResponseDTO struct {
 	TotalAmount float64 `json:"total_price"`
 	UserID      string  `json:"user_id"`
 }
+
+type UpdatePaymentStatusDTO struct {
+	OrderId       *string `json:"order_id"`
+	UserId        *string `json:"user_id"`
+	CartId        *string `json:"cart_id"`
+	PaymentStatus *string `json:"payment_status"`
+	UpdatedAt     *string `json:"updated_at"`
+}

@@ -77,6 +77,7 @@ func CreateUserOrder(c *gin.Context) {
 		return
 	}
 	order := models.Order{
+		ID:          utils.GenerateUUID(),
 		UserID:      userId,
 		OrderDate:   orderDate,
 		Status:      "PENDING_PAYMENT",
