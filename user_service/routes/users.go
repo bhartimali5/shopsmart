@@ -24,6 +24,7 @@ func signUp(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	//ppending: Logic to check valid email format
 	err := newUser.Save()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -58,22 +59,35 @@ func signUp(context *gin.Context) {
 // @Router /login [post]
 func login(context *gin.Context) {
 	var loginData models.User
-	err := context.ShouldBindJSON(&loginData)
-	if err != nil {
+	if err := context.ShouldBindJSON(&loginData); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	user_role, err := loginData.ValidateCredentials()
+
+	hashedPassword, err := loginData.FetchPasswordHashFromEmail()
 	if err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
-	token, err := utils.GenerateJWT(loginData.Email, loginData.ID, *user_role)
+	isValid, err := loginData.ValidatePassword(hashedPassword)
+	if err != nil || isValid == nil || !*isValid {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	user_role, err := loginData.FetchUserRoleFromEmail()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := utils.GenerateJWT(loginData.Email, loginData.ID, user_role)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
+
 	context.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": token})
 }
 

@@ -71,24 +71,44 @@ func GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func (u *User) ValidateCredentials() (*string, error) {
-	query := `SELECT id, password, role FROM users WHERE email = ?`
-	row := db.DB.QueryRow(query, u.Email, u.Role)
+func (u *User) FetchPasswordHashFromEmail() (string, error) {
+	query := `SELECT id, password FROM users WHERE email = ?`
+	row := db.DB.QueryRow(query, u.Email)
 	if row == nil {
-		return nil, nil
+		return "", errors.New("user not found")
 	}
 
 	var hashedPassword string
-	err := row.Scan(&u.ID, &hashedPassword, &u.Role)
+	err := row.Scan(&u.ID, &hashedPassword)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
+	return hashedPassword, nil
+}
+
+func (u *User) FetchUserRoleFromEmail() (string, error) {
+	query := `SELECT id, role FROM users WHERE email = ?`
+	row := db.DB.QueryRow(query, u.Email)
+	if row == nil {
+		return "", errors.New("user not found")
+	}
+
+	var role string
+	err := row.Scan(&u.ID, &role)
+	if err != nil {
+		return "", err
+	}
+
+	return role, nil
+}
+
+func (u *User) ValidatePassword(hashedPassword string) (*bool, error) {
 	isPasswordValid := utils.CheckPasswordHash(u.Password, hashedPassword)
 	if !isPasswordValid {
 		return nil, errors.New("invalid credentials")
 	}
-	return &u.Role, nil
+	return &isPasswordValid, nil
 }
 
 func (u *User) Update() error {
