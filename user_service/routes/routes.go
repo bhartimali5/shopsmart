@@ -10,4 +10,8 @@ func RegisterRoutes(server *gin.Engine) {
 	server.POST("login", login)
 	server.GET("/user/profile", middlewares.AuthMiddleware, getUserProfile)
 	server.PATCH("/user/profile", middlewares.AuthMiddleware, UpdateUserProfile)
+
+	// Internal service routes — not documented in swagger
+	internal := server.Group("/internal", middlewares.InternalAuthMiddleware)
+	internal.GET("/users/:user_id/email", getInternalUserEmail)
 }
