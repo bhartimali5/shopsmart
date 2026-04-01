@@ -8,13 +8,22 @@ import (
 	"os"
 )
 
+// UserServiceBaseURL can be overridden in tests to point at a mock server
+var UserServiceBaseURL = "http://localhost:8001"
+
 type userEmailResponse struct {
 	Email string `json:"email"`
 }
 
-// GetUserEmail fetches user email from user_service internal endpoint.
-func GetUserEmail(userID string) (string, error) {
-	url := fmt.Sprintf("http://localhost:8001/internal/users/%s/email", userID)
+// UserEmailFetcher is the real implementation of consumers.UserEmailFetcher
+type UserEmailFetcher struct{}
+
+func NewUserEmailFetcher() *UserEmailFetcher {
+	return &UserEmailFetcher{}
+}
+
+func (u *UserEmailFetcher) GetEmail(userID string) (string, error) {
+	url := fmt.Sprintf("%s/internal/users/%s/email", UserServiceBaseURL, userID)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -43,4 +52,9 @@ func GetUserEmail(userID string) (string, error) {
 	}
 
 	return result.Email, nil
+}
+
+// GetUserEmail is kept for backward compatibility
+func GetUserEmail(userID string) (string, error) {
+	return NewUserEmailFetcher().GetEmail(userID)
 }

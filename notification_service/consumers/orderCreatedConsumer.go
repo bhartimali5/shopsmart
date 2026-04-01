@@ -10,6 +10,24 @@ import (
 	"example.com/rest-api/utils"
 )
 
+// EmailSender allows mocking in tests
+type EmailSender interface {
+	Send(to, subject, body string)
+}
+
+// UserEmailFetcher allows mocking in tests
+type UserEmailFetcher interface {
+	GetEmail(userID string) (string, error)
+}
+
+// defaultEmailSender wraps utils.SendEmail
+type defaultEmailSender struct{}
+
+func (d *defaultEmailSender) Send(to, subject, body string) {
+	utils.SendEmail(to, subject, body)
+}
+
+
 func OrderCreatedConsumer() {
 	msgs, err := rabbitmq.ConsumeEvents("exchange", "notification_order_queue", "topic", "order.created")
 	if err != nil {
@@ -25,7 +43,7 @@ func OrderCreatedConsumer() {
 				continue
 			}
 
-			if err := handleOrderCreated(event); err != nil {
+			if err := HandleOrderCreated(event, utils.NewUserEmailFetcher(), &defaultEmailSender{}); err != nil {
 				log.Printf("Error handling order.created event: %v", err)
 				msg.Nack(false, false)
 				continue
@@ -37,8 +55,8 @@ func OrderCreatedConsumer() {
 	log.Println("OrderCreatedConsumer started...")
 }
 
-func handleOrderCreated(event dto.OrderCreatedEvent) error {
-	email, err := utils.GetUserEmail(event.UserID)
+func HandleOrderCreated(event dto.OrderCreatedEvent, fetcher UserEmailFetcher, sender EmailSender) error {
+	email, err := fetcher.GetEmail(event.UserID)
 	if err != nil {
 		return fmt.Errorf("could not fetch user email: %w", err)
 	}
@@ -49,6 +67,6 @@ func handleOrderCreated(event dto.OrderCreatedEvent) error {
 		event.ID, event.OrderDate, event.TotalAmount, event.Status,
 	)
 
-	utils.SendEmail(email, subject, body)
+	sender.Send(email, subject, body)
 	return nil
 }
