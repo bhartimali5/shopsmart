@@ -57,6 +57,21 @@ func GetCurrentUserOrders(c *gin.Context) {
 func CreateUserOrder(c *gin.Context) {
 	userId := c.GetString("user_id")
 
+	// Idempotency key check — if key already used, return the existing order
+	idempotencyKey := c.GetHeader("Idempotency-Key")
+	if idempotencyKey != "" {
+		existing, err := models.GetOrderByIdempotencyKey(idempotencyKey)
+		if err == nil && existing != nil {
+			c.JSON(http.StatusOK, dto.CreateOrderResponseDTO{
+				UserID:      existing.UserID,
+				OrderDate:   existing.OrderDate,
+				Status:      existing.Status,
+				TotalAmount: existing.TotalAmount,
+			})
+			return
+		}
+	}
+
 	// Fetch cart details from Cart Service
 	cartDetails := utils.GetCartItemDetails(userId, c.GetHeader("Authorization"))
 	if reflect.DeepEqual(cartDetails, reflect.Zero(reflect.TypeOf(cartDetails)).Interface()) {
@@ -77,12 +92,13 @@ func CreateUserOrder(c *gin.Context) {
 		return
 	}
 	order := models.Order{
-		ID:          utils.GenerateUUID(),
-		UserID:      userId,
-		OrderDate:   orderDate,
-		Status:      "PENDING_PAYMENT",
-		TotalAmount: cartDetails.Cart.TotalPrice,
-		CartID:      cartDetails.Items[0].CartId,
+		ID:             utils.GenerateUUID(),
+		UserID:         userId,
+		OrderDate:      orderDate,
+		Status:         "PENDING_PAYMENT",
+		TotalAmount:    cartDetails.Cart.TotalPrice,
+		CartID:         cartDetails.Items[0].CartId,
+		IdempotencyKey: idempotencyKey,
 	}
 	// save order using transaction
 	tx, err := order.SaveTx()

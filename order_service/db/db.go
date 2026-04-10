@@ -28,8 +28,6 @@ func ExecQuery(query string) {
 }
 
 func CreateTables() {
-
-	// Create order table
 	CreateOrderTableQuery := `CREATE TABLE IF NOT EXISTS orders (
 		id TEXT NOT NULL,
 		user_id TEXT NOT NULL,
@@ -37,8 +35,8 @@ func CreateTables() {
 		cart_id TEXT NOT NULL,
 		status TEXT,
 		total_amount REAL NOT NULL,
+		idempotency_key TEXT UNIQUE,
 		PRIMARY KEY (user_id, cart_id)
 	);`
 	ExecQuery(CreateOrderTableQuery)
-
 }

@@ -5,6 +5,9 @@ import (
 	"fmt"
 )
 
+// CartServiceBaseURL can be overridden in tests to point at a mock server
+var CartServiceBaseURL = "http://localhost:8080"
+
 type CartSummary struct {
 	Cart struct {
 		UserID     string  `json:"user_id"`
@@ -20,10 +23,9 @@ type CartSummary struct {
 }
 
 func GetCartItemDetails(userId string, auth_token string) CartSummary {
-	// Make request to Cart Service to get active cart ID for the user
 	var cartDetails CartSummary
 
-	url := "http://localhost:8080/cart/items"
+	url := CartServiceBaseURL + "/cart/items"
 
 	respBody, err := MakeHTTPGETRequest(url, auth_token)
 	if err != nil {
@@ -40,7 +42,7 @@ func GetCartItemDetails(userId string, auth_token string) CartSummary {
 }
 
 func ClearUserCart(userId string, auth_token string) error {
-	url := "http://localhost:8080/cart/clear/"
+	url := CartServiceBaseURL + "/cart/clear/"
 	err := MakeHTTPDELETERequest(url, auth_token)
 	if err != nil {
 		fmt.Println("Error making HTTP DELETE request:", err)

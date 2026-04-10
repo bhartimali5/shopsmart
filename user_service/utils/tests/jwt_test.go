@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"strings"
 	"testing"
 
 	"example.com/rest-api/utils"
@@ -8,12 +9,18 @@ import (
 )
 
 func TestGenerateJWT_ShouldReturnToken_WhenValidEmailAndIDAreProvided(t *testing.T) {
+	// Arrange
 	email := "test_user@example.com"
 	id := "12345"
 	role := "user"
+
+	// Act
 	token, err := utils.GenerateJWT(email, id, role)
+
+	// Assert
 	assert.NoError(t, err)
-	assert.NotEmpty(t, token)
+	// Stronger than NotEmpty: a JWT always has 3 dot-separated parts — verifies structure not just presence
+	assert.Equal(t, 3, len(strings.Split(token, ".")))
 }
 
 func TestGenerateJWT_ShouldGenerateDifferentTokensWhenGivenDifferentRoles(t *testing.T) {

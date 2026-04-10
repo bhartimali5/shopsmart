@@ -8,12 +8,24 @@ import (
 )
 
 type Order struct {
-	ID          string  `json:"id"`
-	CartID      string  `json:"cart_id"`
-	OrderDate   string  `json:"order_date"`
-	Status      string  `json:"status"`
-	TotalAmount float64 `json:"total_amount"`
-	UserID      string  `json:"user_id"`
+	ID              string  `json:"id"`
+	CartID          string  `json:"cart_id"`
+	OrderDate       string  `json:"order_date"`
+	Status          string  `json:"status"`
+	TotalAmount     float64 `json:"total_amount"`
+	UserID          string  `json:"user_id"`
+	IdempotencyKey  string  `json:"idempotency_key,omitempty"`
+}
+
+// GetOrderByIdempotencyKey returns an existing order if the key was already used
+func GetOrderByIdempotencyKey(key string) (*Order, error) {
+	query := `SELECT id, user_id, order_date, cart_id, status, total_amount FROM orders WHERE idempotency_key = ?`
+	row := db.DB.QueryRow(query, key)
+	var order Order
+	if err := row.Scan(&order.ID, &order.UserID, &order.OrderDate, &order.CartID, &order.Status, &order.TotalAmount); err != nil {
+		return nil, err
+	}
+	return &order, nil
 }
 
 func (o *Order) Save() error {
@@ -25,16 +37,15 @@ func (o *Order) Save() error {
 	return err
 }
 
-// Save by using transaction
 func (o *Order) SaveTx() (*sql.Tx, error) {
-	query := `INSERT INTO orders (id, user_id, order_date, cart_id, status, total_amount) 
-			  VALUES (?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO orders (id, user_id, order_date, cart_id, status, total_amount, idempotency_key) 
+			  VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	tx, err := db.DB.Begin()
 	if err != nil {
 		return nil, err
 	}
-	_, err = tx.Exec(query, o.ID, o.UserID, o.OrderDate, o.CartID, o.Status, o.TotalAmount)
+	_, err = tx.Exec(query, o.ID, o.UserID, o.OrderDate, o.CartID, o.Status, o.TotalAmount, o.IdempotencyKey)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
